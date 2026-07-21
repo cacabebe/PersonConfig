@@ -1,0 +1,4 @@
+interface:
+  display_name: "Conventional Commits"
+  short_description: "按约定式提交规范生成清晰准确的中文 Git 提交信息"
+  default_prompt: "使用 $conventional-commits 为暂存区变更生成符合规范的中文 Git 提交信息。"

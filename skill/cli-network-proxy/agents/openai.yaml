@@ -1,0 +1,7 @@
+interface:
+  display_name: "CLI Network Proxy"
+  short_description: "Use local proxy for external CLI network calls"
+  default_prompt: "Use $cli-network-proxy when running command-line tools that need external network access."
+
+policy:
+  allow_implicit_invocation: true
