@@ -1,0 +1,7 @@
+interface:
+  display_name: "Codebase Design"
+  short_description: "Vocabulary for deep-module design"
+  default_prompt: "Use $codebase-design to evaluate this interface through the deep-module lens and compare alternatives."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,7 +1,9 @@
 param(
-  [Parameter(Mandatory = $true)]
-  [string] $CommandLine,
-  [switch] $Node
+  [switch] $Node,
+  [Parameter(Mandatory = $true, Position = 0)]
+  [string] $Command,
+  [Parameter(Position = 1, ValueFromRemainingArguments = $true)]
+  [string[]] $Arguments
 )
 
 $env:HTTP_PROXY = 'http://127.0.0.1:10808'
@@ -13,5 +15,16 @@ if ($Node) {
   $env:NODE_OPTIONS = (($env:NODE_OPTIONS + ' --use-env-proxy').Trim())
 }
 
-Invoke-Expression $CommandLine
-exit $LASTEXITCODE
+$ErrorActionPreference = 'Stop'
+
+try {
+  & $Command @Arguments
+  if ($null -ne $LASTEXITCODE) {
+    exit $LASTEXITCODE
+  }
+  exit 0
+}
+catch {
+  Write-Error $_
+  exit 1
+}

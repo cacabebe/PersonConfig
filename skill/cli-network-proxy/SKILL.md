@@ -18,9 +18,16 @@ Proxy endpoints:
 1. For any external network command, first add a command-scoped proxy.
 2. Keep the proxy scoped to the shell command unless the user explicitly asks for persistent config.
 3. Do not modify Windows system proxy, browser proxy, Chrome flags, or global user env vars unless explicitly requested.
-4. If a direct network command fails with timeout, reset, DNS, TLS, or registry errors, retry once through the proxy.
+4. If the proxied command fails because `127.0.0.1:10808` is unavailable, check the port once and report the result. Do not silently fall back to persistent configuration or change system settings.
 
 ## PowerShell wrapper
+
+The bundled wrapper accepts an executable followed by its arguments. It invokes the executable directly and does not evaluate a command string:
+
+```powershell
+& ./scripts/with-proxy.ps1 git clone https://github.com/owner/repo
+& ./scripts/with-proxy.ps1 -Node node script.mjs
+```
 
 For most commands, prepend temporary env vars in the same PowerShell command:
 
