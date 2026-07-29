@@ -1,7 +1,7 @@
 interface:
-  display_name: "CLI Network Proxy"
-  short_description: "Use local proxy for external CLI network calls"
-  default_prompt: "Use $cli-network-proxy when running command-line tools that need external network access."
+  display_name: "CLI 网络代理"
+  short_description: "公网 CLI 流量使用代理，内网流量直连"
+  default_prompt: "使用 $cli-network-proxy 处理 CLI 网络访问：内网目标直接连接，公网目标通过代理访问。"
 
 policy:
   allow_implicit_invocation: true

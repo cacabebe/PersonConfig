@@ -1,71 +1,71 @@
 ---
 name: conventional-commits
-description: Draft, review, and refine Chinese git commit messages using the Conventional Commits format. Use when the user asks for a commit message, commit log, git commit text, changelog-oriented commit summary, staged-change commit title/body, or mentions Conventional Commits, conventional commit, 约定式提交, 中文提交日志, 提交日志, or commit message standards.
+description: 按照约定式提交（Conventional Commits）规范起草、审查和优化中文 Git 提交信息。用户要求编写提交信息、提交日志、面向变更日志的提交摘要、暂存区变更的标题或正文，或者提及 Conventional Commits、conventional commit、约定式提交、中文提交日志、提交日志、commit message 规范时使用。
 ---
 
-# Conventional Commits
+# 约定式提交
 
-## Overview
+## 概述
 
-Write Simplified Chinese commit messages that follow Conventional Commits while matching the actual change. Prefer a concise single-line message for small changes and a structured title/body/footer for larger or breaking changes.
+编写符合约定式提交规范且准确反映实际变更的简体中文提交信息。小型变更优先使用简洁的单行信息；大型变更或破坏性变更使用结构化的标题、正文和脚注。
 
-## Language Rules
+## 语言规则
 
-- Write all human-readable commit content in Simplified Chinese by default, including the subject, body, and breaking-change explanation.
-- Keep Conventional Commits syntax tokens in English: type, optional scope, `!`, and footer keys such as `BREAKING CHANGE`, `Refs`, and `Closes`.
-- Do not copy an English commit-message style from repository history unless the user explicitly requests English or another language.
-- Keep code identifiers, API names, configuration keys, commands, and product names in their original form when translating them would reduce clarity.
+- 默认使用简体中文编写所有供人阅读的提交内容，包括主题、正文和破坏性变更说明。
+- 保留约定式提交的英文语法标记，包括类型、可选作用域、`!`，以及 `BREAKING CHANGE`、`Refs`、`Closes` 等脚注键。
+- 除非用户明确要求使用英文或其他语言，否则不要照搬仓库历史中的英文提交风格。
+- 如果翻译会降低清晰度，保留代码标识符、API 名称、配置键、命令和产品名称的原文。
 
-## Workflow
+## 工作流程
 
-1. Identify the change source.
-   - If staged changes are available and the user asks for a commit message, inspect `git status --short`, `git diff --staged --stat`, and enough of `git diff --staged` to understand behavior.
-   - If the user supplies a diff or description, use that instead of probing the repository.
-   - If there are no staged changes and no description, ask whether to use unstaged changes or wait for more context.
+1. 确定变更来源。
+   - 如果存在暂存区变更，且用户要求编写提交信息，检查 `git status --short`、`git diff --staged --stat`，并读取足够的 `git diff --staged` 内容以理解行为变化。
+   - 如果用户提供了差异或变更描述，直接使用这些信息，不再探查仓库。
+   - 如果没有暂存区变更，也没有变更描述，询问用户是分析未暂存变更，还是等待更多上下文。
 
-2. Choose the narrowest accurate type.
-   - `feat`: user-visible feature or capability
-   - `fix`: bug fix
-   - `docs`: documentation-only change
-   - `style`: formatting or style-only code change with no behavior change
-   - `refactor`: code restructuring with no feature or bug-fix behavior change
-   - `perf`: performance improvement
-   - `test`: tests only or test infrastructure
-   - `build`: build system, dependencies, packaging, generated lockfiles
-   - `ci`: CI/CD configuration or workflow changes
-   - `chore`: maintenance that does not fit the above
-   - `revert`: revert of a prior commit
+2. 选择最具体且准确的类型。
+   - `feat`：用户可感知的新功能或新能力
+   - `fix`：缺陷修复
+   - `docs`：仅修改文档
+   - `style`：仅调整格式或代码风格，不改变行为
+   - `refactor`：重构代码，不增加功能，也不修复缺陷
+   - `perf`：性能优化
+   - `test`：仅修改测试或测试基础设施
+   - `build`：修改构建系统、依赖、打包配置或生成的锁文件
+   - `ci`：修改 CI/CD 配置或工作流
+   - `chore`：不属于以上类型的维护性变更
+   - `revert`：撤销先前提交
 
-3. Add an optional scope when it improves scanning.
-   - Use a short noun such as `api`, `auth`, `ui`, `deps`, `docs`, `tests`, or a package/module name.
-   - Keep the scope lowercase unless the local project convention differs.
+3. 在作用域有助于快速识别变更时添加可选作用域。
+   - 使用简短名词，例如 `api`、`auth`、`ui`、`deps`、`docs`、`tests`，或者包名、模块名。
+   - 除非项目本地规范另有要求，否则作用域使用小写。
 
-4. Write the subject.
-   - Format: `<type>[optional scope][!]: <description>`
-   - Write the description in concise Simplified Chinese and state the concrete action or outcome.
-   - Keep it specific and under about 72 characters when possible.
-   - Do not end the subject with Chinese or English punctuation.
-   - Avoid vague subjects like `更新代码`, `修复问题`, or `其他修改`.
+4. 编写主题。
+   - 格式：`<类型>[可选作用域][!]: <描述>`
+   - 使用简洁的简体中文描述具体动作或结果。
+   - 保持内容具体，并尽量控制在 72 个字符以内。
+   - 主题末尾不要添加中文或英文标点。
+   - 避免使用 `更新代码`、`修复问题`、`其他修改` 等模糊主题。
 
-5. Include a body only when it adds useful context.
-   - Separate the subject and body with a blank line.
-   - Explain what changed and why in Simplified Chinese; avoid restating the diff mechanically.
-   - Wrap body lines around 72 characters when practical.
+5. 仅在正文能够补充有效上下文时添加正文。
+   - 使用空行分隔主题与正文。
+   - 使用简体中文说明改动内容及原因，避免机械复述差异。
+   - 条件允许时，将正文每行控制在约 72 个字符以内。
 
-6. Include footers when needed.
-   - Breaking changes: add `!` before the colon and include a footer:
-     `BREAKING CHANGE: <migration or compatibility impact>`.
-   - Issue references: use the local convention, such as `Refs: #123` or `Closes: #123`.
+6. 按需添加脚注。
+   - 破坏性变更：在冒号前添加 `!`，并添加脚注：
+     `BREAKING CHANGE: <迁移方式或兼容性影响>`。
+   - 议题引用：遵循项目本地规范，例如 `Refs: #123` 或 `Closes: #123`。
 
-## Output Format
+## 输出格式
 
-For a simple change, output only the commit message:
+对于简单变更，仅输出提交信息：
 
 ```text
 fix(auth): 拒绝已过期的刷新令牌
 ```
 
-For a larger change, use a body:
+对于较大变更，添加正文：
 
 ```text
 feat(api): 新增项目归档接口
@@ -76,7 +76,7 @@ feat(api): 新增项目归档接口
 Refs: #248
 ```
 
-For a breaking change:
+对于破坏性变更：
 
 ```text
 feat(config)!: 要求显式配置数据库地址
@@ -86,11 +86,12 @@ feat(config)!: 要求显式配置数据库地址
 BREAKING CHANGE: 部署环境必须在启动前设置 DATABASE_URL。
 ```
 
-## Review Checklist
+## 审查清单
 
-Before finalizing, verify:
-- The type matches the semantic effect of the change.
-- The scope is helpful and not overly broad.
-- The subject describes the outcome, not the implementation chore.
-- Breaking changes are explicit in both marker and footer when present.
-- The subject, body, and footer explanations are in Simplified Chinese unless the user explicitly requests another language.
+最终输出前，确认：
+
+- 类型与变更的语义效果一致。
+- 作用域有助于理解变更，且范围不过于宽泛。
+- 主题描述变更结果，而非实现过程中的琐碎操作。
+- 存在破坏性变更时，同时使用标记和脚注明确说明。
+- 除非用户明确要求使用其他语言，否则主题、正文和脚注说明均使用简体中文。
