@@ -1,0 +1,4 @@
+interface:
+  display_name: "正向文档约束"
+  short_description: "精简过时的负向规则，改写为清晰且可执行的正向约束指南"
+  default_prompt: "Use $positive-doc-constraints to review this document and replace unnecessary negative constraints with clear positive guidance."

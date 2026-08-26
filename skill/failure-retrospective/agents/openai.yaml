@@ -1,0 +1,7 @@
+interface:
+  display_name: "困难问题复盘"
+  short_description: "复盘反复失败和困难缺陷，识别根因、同类风险与工程预防措施"
+  default_prompt: "使用 $failure-retrospective 复盘这个困难或反复失败的问题，并提出预防措施。"
+
+policy:
+  allow_implicit_invocation: true

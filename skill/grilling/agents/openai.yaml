@@ -1,3 +1,4 @@
 interface:
-  display_name: "Grilling"
-  short_description: "Stress-test thinking one question at a time"
+  display_name: "深度追问"
+  short_description: "按决策前沿小批量追问，逐项记录决定并支持后续集中复审"
+  default_prompt: "使用 $grilling 对这个想法按决策前沿进行小批量深度追问，并逐项记录每个决定。"
