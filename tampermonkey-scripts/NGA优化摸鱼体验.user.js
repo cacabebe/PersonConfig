@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NGA优化摸鱼体验
 // @namespace    https://github.com/kisshang1993/NGA-BBS-Script
-// @version      4.5.7
+// @version      4.5.10
 // @author       HLD
 // @description  NGA论坛显示优化，全面功能增强，优雅的摸鱼
 // @license      MIT
@@ -1714,7 +1714,7 @@
         .hld__excel-body #mainmenu, .hld__excel-body #mainmenu .half, .hld__excel-body #mainmenu td a, .hld__excel-body #mainmenu .stdbtn .innerbg, .hld__excel-body #mainmenu, .hld__excel-body #mainmenu .stdbtn a, .hld__excel-body #mainmenu .stdbtn .td {height: 20px !important;line-height: 20px !important;padding: 0 5px !important;background:none;color:#424242 !important;}
         .hld__excel-body #mainmenu .innerbg > div:nth-child(2) > div:first-child {display:none;}
         .hld__excel-body .single_ttip2 {position: fixed !important;z-index:999 !important;top:30px !important;border-color:#888;}
-        .hld__excel-body .hld__excel-body #mainmenu, .hld__excel-body .catenew,.hld__excel-body #toptopics,.hld__excel-body #m_pbtntop,.hld__excel-body #m_fopts,.hld__excel-body #b_nav,.hld__excel-body #fast_post_c,.hld__excel-body #custombg,.hld__excel-body #m_threads th,.hld__excel-body #m_posts th,.hld__excel-body .r_container,.hld__excel-body #footer,.hld__excel-body .clickextend {display:none !important;}
+        .hld__excel-body .hld__excel-body #mainmenu, .hld__excel-body .catenew,.hld__excel-body #toptopics,.hld__excel-body #m_pbtntop,.hld__excel-body #m_fopts,.hld__excel-body #b_nav,.hld__excel-body:not(.hld__excel-reply-enabled) #fast_post_c,.hld__excel-body #custombg,.hld__excel-body #m_threads th,.hld__excel-body #m_posts th,.hld__excel-body .r_container,.hld__excel-body #footer,.hld__excel-body .clickextend {display:none !important;}
         .hld__excel-body #mmc {margin-top:195px;margin-bottom:35px;}
         .hld__excel-body .postBtnPos > div, .hld__excel-body .postBtnPos .stdbtn a {background:#fff !important;border-color:#bbb;}
         .hld__excel-body .hld__excel-div,.hld__excel-body .hld__excel-setting {display:block;}
@@ -3471,17 +3471,103 @@
             }
         }
     }
-    /**
-     * 扩展坞模块
-     * @name ExtraDocker
-     * @description 此模块提供了一个悬浮的扩展坞，来添加某些功能
-     *              目前添加的功能有: 
-     *                  返回顶部: 无跳转返回当前页面的第一页/刷新当页
-     *                  打开菜单: 打开个人主菜单
-     *                  收藏: 收藏主题
-     *                  回复: 回复主题
-     *                  跳转尾页: 跳转到当前帖子的尾页
-     */
+    /** Excel模式下复用原生快捷回复，将编辑区域显示为批注面板。 */
+    const ExcelQuickReply = {
+        name: 'ExcelQuickReply',
+        title: '快捷回复摸鱼化',
+        setting: {
+            key: 'excelQuickReply',
+            default: true,
+            title: '快捷回复摸鱼化',
+            desc: 'Excel模式下将原生快捷回复显示为批注面板，扩展坞回复按钮优先打开快捷回复',
+            menu: 'left'
+        },
+        isEnabled() {
+            return script.setting.normal.excelQuickReply && $('body').hasClass('hld__excel-body')
+        },
+        renderAlwaysFunc() {
+            const enabled = this.isEnabled()
+            $('body').toggleClass('hld__excel-reply-enabled', enabled)
+            // NGA 会复用弹窗；每次根据当前内容识别，避免登录等窗口继承回复样式。
+            $('.single_ttip2, [id^="commonwindow"]').each((index, el) => {
+                const $el = $(el)
+                const title = $el.find('.tip_title .title').text().trim()
+                const hasEditor = $el.find('textarea').length > 0
+                const isReply = hasEditor && (
+                    $el.find('textarea[name="post_content"], textarea[name="content"], textarea#postcontent, textarea#post_content').length > 0 ||
+                    /回复|发帖|发表|编辑帖子/.test(title)
+                )
+                $el.toggleClass('hld__excel-reply-window', enabled && isReply)
+                $el.toggleClass('hld__excel-smile-window', enabled && title == '插入表情')
+            })
+            // 仅标记发表操作，其他按钮（如验证码、关闭、预览）保留原样。
+            $('#fast_post_c a, #fast_post_c button, .hld__excel-reply-window a, .hld__excel-reply-window button, .hld__reply-submit').each((index, el) => {
+                $(el).toggleClass('hld__reply-submit', enabled && /^发表回复(?:\s|\(|（|$)/.test($(el).text().trim()))
+            })
+        },
+        openReply(event) {
+            if (!this.isEnabled() || !script.isForms()) return false
+            const editor = $('#fast_post_c textarea:visible:not(:disabled)').get(0)
+            const focusEditor = () => {
+                editor.scrollIntoView({block: 'center'})
+                editor.focus({preventScroll: true})
+                return true
+            }
+            if (editor?.value.trim()) return focusEditor()
+            const commonui = unsafeWindow.commonui
+            const postfunc = unsafeWindow.postfunc
+            const tid = Number(new URL(window.location.href).searchParams.get('tid')) || Number(unsafeWindow.__CURRENT_TID)
+            if (tid && typeof commonui?.openPostWindow == 'function' && postfunc?.__REPLY_BLANK !== undefined) {
+                commonui.openPostWindow(event, postfunc.__REPLY_BLANK, '', tid)
+                return true
+            }
+            // 兼容提供页底内联编辑器的版本，保留原节点与已有草稿。
+            if (!editor) return false
+            return focusEditor()
+        },
+        style: `
+        .hld__excel-body.hld__excel-reply-enabled {--hld-reply-accent:#1e6fff;--hld-reply-top:145px;--hld-reply-bottom:42px;}
+        .hld__excel-body.hld__excel-reply-enabled.hld__excel-theme-wps {--hld-reply-accent:#337ab7;--hld-reply-top:216px;--hld-reply-bottom:60px;}
+        .hld__excel-body.hld__excel-reply-enabled.hld__excel-theme-office {--hld-reply-accent:#227447;--hld-reply-top:241px;--hld-reply-bottom:60px;}
+        .hld__excel-reply-enabled #fast_post_c {box-sizing:border-box;margin:12px 16px 70px 50px;padding:0 12px 12px;border:1px solid #d9dde3;background:#fff !important;box-shadow:none;border-radius:0;scroll-margin-top:var(--hld-reply-top);}
+        .hld__excel-reply-enabled #fast_post_c:before {content:'批注';display:block;margin:0 -12px 12px;padding:8px 12px;border-bottom:1px solid #d9dde3;background:#f7f8fa;color:#4b5563;font:14px/1.5 sans-serif;}
+        .hld__excel-body.hld__excel-reply-enabled .hld__excel-reply-window {position:fixed !important;top:var(--hld-reply-top) !important;left:auto !important;right:16px !important;bottom:auto !important;width:560px !important;min-width:0 !important;max-width:calc(100vw - 32px) !important;max-height:calc(100vh - var(--hld-reply-top) - var(--hld-reply-bottom)) !important;box-sizing:border-box;overflow:auto;z-index:9992 !important;border:1px solid #d9dde3 !important;border-radius:0 !important;background:#fff !important;box-shadow:0 4px 16px #0002;}
+        .hld__excel-reply-enabled .hld__excel-reply-window .tip_title {background:#f7f8fa !important;color:#4b5563 !important;border-bottom:1px solid #d9dde3;}
+        .hld__excel-reply-enabled .hld__excel-reply-window .tip_title .title {font-size:0 !important;}
+        .hld__excel-reply-enabled .hld__excel-reply-window .tip_title .title:after {content:'批注';font:14px/1.5 sans-serif;}
+        .hld__excel-reply-enabled :is(#fast_post_c, .hld__excel-reply-window) :is(form, .div2, .forumbox, .stdbtn, .innerbg, table, td) {background-color:#fff !important;border-color:#d9dde3 !important;box-shadow:none !important;}
+        .hld__excel-reply-enabled :is(#fast_post_c, .hld__excel-reply-window) :is(textarea, input:not([type]), input[type="text"], select) {box-sizing:border-box;max-width:100% !important;border:1px solid #cbd0d8 !important;border-radius:0 !important;background:#fff !important;color:#374151 !important;box-shadow:none !important;font:14px/1.6 -apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif !important;}
+        .hld__excel-reply-enabled :is(#fast_post_c, .hld__excel-reply-window) textarea {width:100% !important;height:86px !important;min-height:86px !important;max-height:86px !important;padding:8px !important;overflow-y:auto !important;resize:none;}
+        .hld__excel-reply-enabled #fast_post_c :is(caption, caption h2) {background:#fff !important;color:#4b5563 !important;font:14px/1.5 sans-serif !important;}
+        .hld__excel-reply-enabled :is(#fast_post_c, .hld__excel-reply-window) textarea:focus {outline:1px solid var(--hld-reply-accent) !important;border-color:var(--hld-reply-accent) !important;}
+        .hld__excel-reply-enabled :is(#fast_post_c, .hld__excel-reply-window) :is(button, input[type="button"], input[type="submit"], .stdbtn a) {background:#f7f8fa !important;border:1px solid #d9dde3 !important;border-radius:2px !important;color:#374151 !important;box-shadow:none !important;}
+        .hld__excel-reply-enabled :is(#fast_post_c, .hld__excel-reply-window) :is(button, input[type="submit"]):hover {border-color:var(--hld-reply-accent) !important;}
+        /* 原生内联编辑器中，标题是正文所在 div 的第一个直接子节点。 */
+        .hld__excel-reply-enabled #fast_post_c .forumbox > tbody > tr > td > div:has(> textarea) > input:first-child {display:none !important;}
+        .hld__excel-reply-enabled #fast_post_c .stdbtn {width:auto !important;min-width:0 !important;margin:0 0 0 auto !important;border:0 !important;}
+        .hld__excel-reply-enabled #fast_post_c .stdbtn td {padding:0 !important;border:0 !important;}
+        .hld__excel-reply-enabled .hld__reply-submit {display:inline-block !important;min-width:0 !important;min-height:0 !important;width:auto !important;height:auto !important;padding:3px 10px !important;font-size:0 !important;line-height:20px !important;background-image:none !important;}
+        .hld__excel-reply-enabled .hld__reply-submit > *, .hld__excel-reply-enabled .hld__reply-submit:before {display:none !important;}
+        .hld__excel-reply-enabled .hld__reply-submit:after {content:'回复';font:12px/20px sans-serif;}
+        .hld__excel-reply-enabled :is(#fast_post_c, .hld__excel-reply-window) button[title="插入表情"] {min-width:0 !important;min-height:0 !important;height:auto !important;padding:3px 8px !important;font-size:0 !important;line-height:20px !important;background-image:none !important;}
+        .hld__excel-reply-enabled :is(#fast_post_c, .hld__excel-reply-window) button[title="插入表情"] > * {display:none !important;}
+        .hld__excel-reply-enabled :is(#fast_post_c, .hld__excel-reply-window) button[title="插入表情"]:after {content:'表情';font:12px/20px sans-serif;}
+        .hld__excel-body.hld__excel-reply-enabled .hld__excel-smile-window {position:fixed !important;top:var(--hld-reply-top) !important;left:auto !important;right:24px !important;bottom:auto !important;width:420px !important;min-width:0 !important;max-width:calc(100vw - 48px) !important;max-height:calc(100vh - var(--hld-reply-top) - var(--hld-reply-bottom)) !important;box-sizing:border-box;overflow:auto;z-index:9993 !important;border:1px solid #d9dde3 !important;border-radius:2px !important;background:#fff !important;color:#4b5563 !important;box-shadow:0 4px 16px #0002 !important;font:12px/1.5 sans-serif !important;}
+        .hld__excel-reply-enabled .hld__excel-smile-window :is(.div1, .div2, .div3, table, td) {background:#fff !important;border-color:#d9dde3 !important;box-shadow:none !important;}
+        .hld__excel-reply-enabled .hld__excel-smile-window .tip_title {padding:6px 10px !important;background:#f7f8fa !important;color:#4b5563 !important;border-bottom:1px solid #d9dde3 !important;font:12px/20px sans-serif !important;}
+        .hld__excel-reply-enabled .hld__excel-smile-window .tip_title .title {font:inherit !important;}
+        .hld__excel-reply-enabled .hld__excel-smile-window .tip_title > a {color:#6b7280 !important;background:none !important;}
+        .hld__excel-reply-enabled .hld__excel-smile-window .tip_title svg {width:10px !important;height:10px !important;fill:#6b7280 !important;}
+        .hld__excel-reply-enabled .hld__excel-smile-window .div3 {padding:8px !important;}
+        .hld__excel-reply-enabled .hld__excel-smile-window .div3 > div > span {color:#6b7280 !important;font-size:10px !important;}
+        .hld__excel-reply-enabled .hld__excel-smile-window button {margin:2px !important;padding:3px 7px !important;min-width:0 !important;min-height:0 !important;border:1px solid #d9dde3 !important;border-radius:2px !important;background:#f7f8fa !important;color:#4b5563 !important;box-shadow:none !important;font:12px/18px sans-serif !important;}
+        .hld__excel-reply-enabled .hld__excel-smile-window button:hover {border-color:var(--hld-reply-accent) !important;background:#eef2f7 !important;}
+        .hld__excel-reply-enabled .hld__excel-smile-window .div3 img {box-sizing:content-box;width:28px !important;height:28px !important;object-fit:contain;margin:2px !important;padding:4px !important;border:1px solid transparent;cursor:pointer;vertical-align:middle;}
+        .hld__excel-reply-enabled .hld__excel-smile-window .div3 img:hover {border-color:#cbd0d8;background:#f7f8fa;}
+        `
+    }
+
+    /** 扩展坞：返回顶部、个人菜单、收藏、回复、跳转尾页。 */
     const ExtraDocker = {
         name: 'ExtraDocker',
         title: '扩展坞',
@@ -3540,7 +3626,10 @@
                 }
                 if (type == 'REPLY') {
                     if (script.isForms()) {
-                        window.location.href = $('#postbbtm a.rep.uitxt1').attr('href')
+                        if (!script.getModule('ExcelQuickReply').openReply(e)) {
+                            const href = $('#postbbtm a.rep.uitxt1').attr('href')
+                            if (href) window.location.href = href
+                        }
                     }
                 }
                 if (type == 'BOTTOM') {
@@ -4560,6 +4649,7 @@
     script.addModule(HideSign)
     script.addModule(HideHeader)
     script.addModule(ExcelMode)
+    script.addModule(ExcelQuickReply)
     script.addModule(FoldQuote)
     script.addModule(UserEnhance)
     script.addModule(LinkTargetBlank)
